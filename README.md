@@ -1,3 +1,3 @@
 # Automation
 
-SOme automation scripts for cisco ASA
+Some automation scripts for cisco ASA
