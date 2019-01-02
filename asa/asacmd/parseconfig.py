@@ -7,8 +7,9 @@ import json
 
 
 class ParseConfig:
-    def __init__(self, asa_full_path, cache_path):
+    def __init__(self, asa_full_path, cache_path, config):
         self.path = asa_full_path
+        self.config = config
         self.cache_path = cache_path
         full_file_name = self.path.split('/')[-1]
         if('.' in full_file_name):
@@ -144,11 +145,16 @@ class ParseConfig:
                     ipa = str(ip_address)
                     first = str(item.split()[1])
                     last = str(item.split()[2])
-                    subnets = []
-                    for ipaddr in ipaddress.summarize_address_range(ipaddress.IPv4Address(first),
-                                                                    ipaddress.IPv4Address(last)):
-                        if ipaddress.ip_address(ipa) in ipaddr:
-                            valid_objects.append(k)
+                    try:
+                        subnets = []
+                        for ipaddr in ipaddress.summarize_address_range(ipaddress.IPv4Address(first),
+                                                                        ipaddress.IPv4Address(last)):
+                            if ipaddress.ip_address(ipa) in ipaddr:
+                                valid_objects.append(k)
+                    except Exception as e:
+                        print('{}  {}  {}'.format(ipa,first,last))
+
+
         return (valid_objects)
 
     # Function to check object-groups for references to the provided IP address
@@ -305,6 +311,7 @@ class ParseConfig:
         return (valid_access_lists)
 
     def get_match_objects(self, user_ip_address):
+        exclude_list = self.config.get_exclude_list
         print("Checking names ....")
         conf_names = self.check_names(self.names, user_ip_address)
         print("Checking objects...")
@@ -317,6 +324,15 @@ class ParseConfig:
         deep_group = self.deep_recursive_object_groups(self.object_groups, conf_object_groups)
         merged_object_groups = conf_object_groups + deep_group
         print(merged_object_groups)
+        print("excluding access list for object groups {}".format(exclude_list))
+        for exclude_object in exclude_list:
+            if(exclude_object in conf_objects):
+                conf_objects.remove(exclude_object)
+            if(exclude_object in conf_object_groups):
+                conf_object_groups.remove(exclude_object)
+            if(exclude_object in merged_object_groups):
+                merged_object_groups.remove(exclude_object)
+
         print("Checking access-lists...")
         conf_access_lists = self.check_access_lists(self.access_lists, conf_names, conf_objects, merged_object_groups, user_ip_address)
         print(conf_access_lists)

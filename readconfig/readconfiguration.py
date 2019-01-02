@@ -40,6 +40,16 @@ class ReadConfiguration:
         return device_list
 
     @property
+    def get_exclude_list(self):
+        device_list_path = '{0}/configfiles/excludegroup'.format(self.main_directory)
+        device_list = []
+        with open(device_list_path, 'r') as file_handle:
+            file_content = file_handle.readlines()
+            for line in file_content:
+                device_list.append(line.strip())
+        return device_list
+
+    @property
     def get_command_list(self):
         command_list_path = '{0}/configfiles/commandlist'.format(self.main_directory)
         command_list = []
